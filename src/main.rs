@@ -59,6 +59,7 @@ enum Direction {
     right,
 }
 
+#[derive(Clone)]
 struct Tor<T>
     where T: Clone
 {
@@ -84,33 +85,32 @@ impl<T> Iterator for Tor<T>
 {
     type Item = T;
     fn next(&mut self) -> Option<T> {
-        if self.current_index == self.end_index {
+        let value = if self.current_index == self.end_index - 1 {
             None
         } else {
-            self.current_index = self.current_index + 1 % self.data.len();
             Some(self.data[self.current_index].clone())
-        }
+        };
+        self.current_index = (self.current_index + 1) % self.data.len();
+        value
     }
 }
 
 struct Snake {
-    heads_index: usize,
-    body: Vec<Direction>,
+    body: Tor<Direction>,
 }
 
 impl Snake {
     fn new(size: usize) -> Snake {
         Snake {
-            heads_index: 0,
-            body: vec![Direction::left,
-                       Direction::up,
-                       Direction::left,
-                       Direction::left,
-                       Direction::left,
-                       Direction::down,
-                       Direction::down,
-                       Direction::down,
-                       Direction::right],
+            body: Tor::new(vec![Direction::left,
+                                Direction::up,
+                                Direction::left,
+                                Direction::left,
+                                Direction::left,
+                                Direction::down,
+                                Direction::down,
+                                Direction::down,
+                                Direction::right]),
         }
     }
 }
