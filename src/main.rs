@@ -22,9 +22,11 @@ impl Board {
         let mut pos = self.snakes_position;
         self.snake
             .body
-            .iter()
+            .clone()
+            .into_iter()
             .map(|x| {
-                pos = match *x {
+                pos = match x {
+                    // TODO: deal with walls
                     Direction::left => pos - 1,
                     Direction::right => pos + 1,
                     Direction::up => pos - self.n_cols,
@@ -57,6 +59,40 @@ enum Direction {
     right,
 }
 
+struct Tor<T>
+    where T: Clone
+{
+    current_index: usize,
+    end_index: usize,
+    data: Vec<T>,
+}
+
+impl<T> Tor<T>
+    where T: Clone
+{
+    fn new(v: Vec<T>) -> Tor<T> {
+        Tor {
+            current_index: 0,
+            end_index: v.len(),
+            data: v,
+        }
+    }
+}
+
+impl<T> Iterator for Tor<T>
+    where T: Clone
+{
+    type Item = T;
+    fn next(&mut self) -> Option<T> {
+        if self.current_index == self.end_index {
+            None
+        } else {
+            self.current_index = self.current_index + 1 % self.data.len();
+            Some(self.data[self.current_index].clone())
+        }
+    }
+}
+
 struct Snake {
     heads_index: usize,
     body: Vec<Direction>,
@@ -74,7 +110,7 @@ impl Snake {
                        Direction::down,
                        Direction::down,
                        Direction::down,
-					   Direction::right],
+                       Direction::right],
         }
     }
 }
