@@ -27,10 +27,10 @@ impl Board {
             .map(|x| {
                 pos = match x {
                     // TODO: deal with walls
-                    Direction::left => pos - 1,
-                    Direction::right => pos + 1,
-                    Direction::up => pos - self.n_cols,
-                    Direction::down => pos + self.n_cols,
+                    Direction::Left => pos - 1,
+                    Direction::Right => pos + 1,
+                    Direction::Up => pos - self.n_cols,
+                    Direction::Down => pos + self.n_cols,
                 };
                 pos
 
@@ -53,10 +53,10 @@ impl Board {
 
 #[derive(Clone)]
 enum Direction {
-    up,
-    down,
-    left,
-    right,
+    Up,
+    Down,
+    Left,
+    Right,
 }
 
 #[derive(Clone)]
@@ -100,24 +100,24 @@ struct Snake {
 }
 
 impl Snake {
-    fn new(size: usize) -> Snake {
+    fn new() -> Snake {
         Snake {
-            body: Tor::new(vec![Direction::left,
-                                Direction::up,
-                                Direction::left,
-                                Direction::left,
-                                Direction::left,
-                                Direction::down,
-                                Direction::down,
-                                Direction::down,
-                                Direction::right]),
+            body: Tor::new(vec![Direction::Left,
+                                Direction::Up,
+                                Direction::Left,
+                                Direction::Left,
+                                Direction::Left,
+                                Direction::Down,
+                                Direction::Down,
+                                Direction::Down,
+                                Direction::Right]),
         }
     }
 }
 
 fn main() {
     let format = Format::new(3, 1);
-    let snake = Snake::new(4);
+    let snake = Snake::new();
     let board = Board::new(22, snake);
     let data = matrix::Matrix::new(board.n_cols(), board.data());
     let display = MatrixDisplay::new(format, data);
