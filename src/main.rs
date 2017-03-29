@@ -66,7 +66,15 @@ impl Snake {
     fn new(size: usize) -> Snake {
         Snake {
             heads_index: 0,
-            body: vec![Direction::left; size],
+            body: vec![Direction::left,
+                       Direction::up,
+                       Direction::left,
+                       Direction::left,
+                       Direction::left,
+                       Direction::down,
+                       Direction::down,
+                       Direction::down,
+					   Direction::right],
         }
     }
 }
