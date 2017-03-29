@@ -18,12 +18,19 @@ impl Board {
     fn n_cols(&self) -> usize {
         self.n_cols
     }
-	
+    fn snake_body(&self) -> Vec<usize> {
+	    let mut pos = self.snakes_position;
+		// TODO: generate indices of present body sections by following directions
+		self.snake.body.iter().map(|x| { pos = pos - 1; pos} ).collect::<Vec<_>>()
+	}
     fn data(&self) -> Vec<matrix_display::cell::Cell<char>> {
-        (0..self.n_cols * self.n_cols)
+        let body = self.snake_body();
+		(0..self.n_cols * self.n_cols)
             .map(|x| if x == self.snakes_position {
-                     cell::Cell::new('H', 15, 16)
-                 } else {
+                     cell::Cell::new('@', 4, 16)
+                 } else if body.contains(&x) {
+                     cell::Cell::new('o', 15, 16)
+				 } else {
                      cell::Cell::new(' ', 0, 16)
                  })
             .collect::<Vec<_>>()
