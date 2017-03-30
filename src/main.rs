@@ -59,6 +59,15 @@ enum Direction {
     Right,
 }
 
+fn opposite(dir: Direction) -> Direction {
+    match dir {
+        Direction::Up => Direction::Down,
+        Direction::Down => Direction::Up,
+        Direction::Left => Direction::Right,
+        Direction::Right => Direction::Left,
+    }
+}
+
 #[derive(Clone)]
 struct Tor<T>
     where T: Clone
@@ -74,9 +83,28 @@ impl<T> Tor<T>
     fn new(v: Vec<T>) -> Tor<T> {
         Tor {
             current_index: 0,
-            end_index: v.len(),
+            end_index: v.len() - 1,
             data: v,
         }
+    }
+    fn increment_index(&self, index: usize) -> usize {
+        if index == self.data.len() - 1 {
+            0
+        } else {
+            index + 1
+        }
+    }
+    fn decrement_index(&self, index: usize) -> usize {
+        if index == 0 {
+            self.data.len() - 1
+        } else {
+            index - 1
+        }
+    }
+    fn insert(&mut self, value: T) {
+        self.data[self.end_index] = value;
+        self.current_index = self.decrement_index(self.current_index);
+        self.end_index = self.decrement_index(self.end_index);
     }
 }
 
@@ -85,12 +113,12 @@ impl<T> Iterator for Tor<T>
 {
     type Item = T;
     fn next(&mut self) -> Option<T> {
-        let value = if self.current_index == self.end_index - 1 {
+        let value = if self.current_index == self.end_index {
             None
         } else {
             Some(self.data[self.current_index].clone())
         };
-        self.current_index = (self.current_index + 1) % self.data.len();
+        self.current_index = self.increment_index(self.current_index);
         value
     }
 }
@@ -113,11 +141,17 @@ impl Snake {
                                 Direction::Right]),
         }
     }
+    fn crawl(&mut self, direction: Direction) {
+        self.body.insert(opposite(direction));
+    }
 }
 
 fn main() {
     let format = Format::new(3, 1);
-    let snake = Snake::new();
+    let mut snake = Snake::new();
+    snake.crawl(Direction::Up);
+    snake.crawl(Direction::Right);
+    snake.crawl(Direction::Up);
     let board = Board::new(22, snake);
     let data = matrix::Matrix::new(board.n_cols(), board.data());
     let display = MatrixDisplay::new(format, data);
