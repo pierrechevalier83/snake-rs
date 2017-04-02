@@ -8,6 +8,25 @@ use termion::raw::IntoRawMode;
 use std::io::{Write, stdout};
 use std::collections::VecDeque;
 
+fn wrap_inc(x: &mut isize, n: isize) {
+    *x = (*x + 1) % n;
+}
+
+fn wrap_dec(x: &mut isize, n: isize) {
+    // Workaround strange behaviour of modulo operator in rust:
+	// -1 % 10 returns -1 instead of 9!!!
+    *x = ((*x - 1) + n) % n;
+}
+
+fn move_point(direction: &Direction, (x, y): (&mut isize, &mut isize), bounds: (isize, isize)) {
+    match *direction {
+        Direction::Left => wrap_dec(x, bounds.0),
+        Direction::Right => wrap_inc(x, bounds.0),
+        Direction::Up => wrap_dec(y, bounds.1),
+        Direction::Down => wrap_inc(y, bounds.1),
+    };
+}
+
 struct Board {
     n_cols: isize,
     snakes_position: (isize, isize),
@@ -25,17 +44,9 @@ impl Board {
     fn n_cols(&self) -> isize {
         self.n_cols
     }
-    fn move_point(&self, direction: &Direction, (x, y): (&mut isize, &mut isize)) {
-        match *direction {
-            Direction::Left => *x = *x - 1 % self.n_cols,
-            Direction::Right => *x = *x + 1 % self.n_cols,
-            Direction::Up => *y = *y - 1 % self.n_cols,
-            Direction::Down => *y = *y + 1 % self.n_cols,
-        };
-    }
     fn process_input(&mut self, direction: Direction) {
+        move_point(&direction, (&mut self.snakes_position.0, &mut self.snakes_position.1), (self.n_cols, self.n_cols));
         self.snake.crawl(direction);
-
     }
     fn snake_body(&self) -> Vec<(isize, isize)> {
         let (mut x, mut y) = self.snakes_position;
@@ -44,7 +55,7 @@ impl Board {
             .iter()
             .map(|dir| {
                      // TODO: deal with collisions
-                     self.move_point(dir, (&mut x, &mut y));
+                     move_point(dir, (&mut x, &mut y), (self.n_cols, self.n_cols));
                      (x, y)
                  })
             .collect::<Vec<_>>()
