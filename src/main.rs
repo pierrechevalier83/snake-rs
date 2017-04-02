@@ -9,45 +9,44 @@ use std::io::{Write, stdout};
 use std::collections::VecDeque;
 
 struct Board {
-    n_cols: usize,
-    snakes_position: (usize, usize),
+    n_cols: isize,
+    snakes_position: (isize, isize),
     snake: Snake,
 }
 
 impl Board {
-    fn new(size: usize) -> Board {
+    fn new(size: isize) -> Board {
         Board {
             n_cols: size,
             snakes_position: (size / 2, size / 2),
             snake: Snake::new(),
         }
     }
-    fn n_cols(&self) -> usize {
+    fn n_cols(&self) -> isize {
         self.n_cols
     }
-    fn snake_body(&self) -> Vec<(usize, usize)> {
+    fn move_point(&self, direction: &Direction, (x, y): (&mut isize, &mut isize)) {
+        match *direction {
+            Direction::Left => *x = *x - 1 % self.n_cols,
+            Direction::Right => *x = *x + 1 % self.n_cols,
+            Direction::Up => *y = *y - 1 % self.n_cols,
+            Direction::Down => *y = *y + 1 % self.n_cols,
+        };
+    }
+    fn process_input(&mut self, direction: Direction) {
+        self.snake.crawl(direction);
+
+    }
+    fn snake_body(&self) -> Vec<(isize, isize)> {
         let (mut x, mut y) = self.snakes_position;
         self.snake
             .body
             .iter()
             .map(|dir| {
-                match dir {
-                    // TODO: deal with collisions
-                    &Direction::Left => {
-                        x -= 1;
-                    }
-                    &Direction::Right => {
-                        x += 1;
-                    }
-                    &Direction::Up => {
-                        y -= 1;
-                    }
-                    &Direction::Down => {
-                        y += 1;
-                    }
-                };
-                (x, y)
-            })
+                     // TODO: deal with collisions
+                     self.move_point(dir, (&mut x, &mut y));
+                     (x, y)
+                 })
             .collect::<Vec<_>>()
     }
     fn data(&self) -> Vec<matrix_display::cell::Cell<char>> {
@@ -115,7 +114,7 @@ fn main() {
 
     let mut board = Board::new(22);
     board.snake = Snake::new();
-    let data = matrix::Matrix::new(board.n_cols(), board.data());
+    let data = matrix::Matrix::new(board.n_cols() as usize, board.data());
     let format = Format::new(3, 1);
     let display = MatrixDisplay::new(format, data);
     write!(stdout,
@@ -134,20 +133,20 @@ fn main() {
                     break;
                 }
                 Event::Key(Key::Up) => {
-                    board.snake.crawl(Direction::Up);
+                    board.process_input(Direction::Up);
                 }
                 Event::Key(Key::Down) => {
-                    board.snake.crawl(Direction::Down);
+                    board.process_input(Direction::Down);
                 }
                 Event::Key(Key::Left) => {
-                    board.snake.crawl(Direction::Left);
+                    board.process_input(Direction::Left);
                 }
                 Event::Key(Key::Right) => {
-                    board.snake.crawl(Direction::Right);
+                    board.process_input(Direction::Right);
                 }
                 _ => (),
             };
-            let data = matrix::Matrix::new(board.n_cols(), board.data());
+            let data = matrix::Matrix::new(board.n_cols() as usize, board.data());
             let disp = MatrixDisplay::new(Format::new(3, 1), data);
             write!(stdout,
                    "{}{}{}",
