@@ -27,6 +27,12 @@ fn move_point(direction: &Direction, (x, y): (&mut isize, &mut isize), bounds: (
     };
 }
 
+enum Status {
+    Alive,
+	Dead,
+	Quit,
+}
+
 struct Board {
     n_cols: isize,
     snakes_position: (isize, isize),
@@ -44,11 +50,13 @@ impl Board {
     fn n_cols(&self) -> isize {
         self.n_cols
     }
-    fn process_input(&mut self, direction: Direction) {
+    fn process_input(&mut self, direction: Direction) -> Status {
         move_point(&direction, (&mut self.snakes_position.0, &mut self.snakes_position.1), (self.n_cols, self.n_cols));
         self.snake.crawl(direction);
 		if self.snake_body().iter().skip(1).collect::<Vec<_>>().contains(&&self.snakes_position) {
-		    panic!("Snake died a painful death!");
+		    Status::Dead
+		} else {
+		    Status::Alive
 		}
     }
     fn snake_body(&self) -> Vec<(isize, isize)> {
@@ -144,24 +152,29 @@ fn main() {
     print_board(&board, &mut stdout);
     loop {
         if let Some(evt) = stdin.next() {
-            match evt.unwrap() {
+            let status = match evt.unwrap() {
                 Event::Key(Key::Char('q')) => {
-                    break;
+                    Status::Quit
                 }
                 Event::Key(Key::Up) => {
-                    board.process_input(Direction::Up);
+                    board.process_input(Direction::Up)
                 }
                 Event::Key(Key::Down) => {
-                    board.process_input(Direction::Down);
+                    board.process_input(Direction::Down)
                 }
                 Event::Key(Key::Left) => {
-                    board.process_input(Direction::Left);
+                    board.process_input(Direction::Left)
                 }
                 Event::Key(Key::Right) => {
-                    board.process_input(Direction::Right);
+                    board.process_input(Direction::Right)
                 }
-                _ => (),
+                _ => Status::Alive,
             };
+			match status {
+			    Status::Quit => { break; },
+				Status::Dead => { break; },
+				Status::Alive => (),
+			};
     		print_board(&board, &mut stdout);
         }
         std::thread::sleep(std::time::Duration::from_millis(10));
