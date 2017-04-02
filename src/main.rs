@@ -6,6 +6,7 @@ use termion::event::{Key, Event};
 use termion::input::TermRead;
 use termion::raw::IntoRawMode;
 use std::io::{Write, stdout};
+use std::collections::VecDeque;
 
 struct Board {
     n_cols: usize,
@@ -29,7 +30,7 @@ impl Board {
         self.snake
             .body
             .clone()
-            .into_iter()
+            .data.into_iter()
             .map(|x| {
                 pos = match x {
                     // TODO: deal with walls
@@ -78,54 +79,20 @@ fn opposite(dir: Direction) -> Direction {
 struct Tor<T>
     where T: Clone
 {
-    current_index: usize,
-    end_index: usize,
-    data: Vec<T>,
+    data: VecDeque<T>,
 }
 
 impl<T> Tor<T>
     where T: Clone
 {
-    fn new(v: Vec<T>) -> Tor<T> {
+    fn new(v: VecDeque<T>) -> Tor<T> {
         Tor {
-            current_index: 0,
-            end_index: v.len() - 1,
             data: v,
         }
     }
-    fn increment_index(&self, index: usize) -> usize {
-        if index == self.data.len() - 1 {
-            0
-        } else {
-            index + 1
-        }
-    }
-    fn decrement_index(&self, index: usize) -> usize {
-        if index == 0 {
-            self.data.len() - 1
-        } else {
-            index - 1
-        }
-    }
     fn insert(&mut self, value: T) {
-        self.data[self.end_index] = value;
-        self.current_index = self.decrement_index(self.current_index);
-        self.end_index = self.decrement_index(self.end_index);
-    }
-}
-
-impl<T> Iterator for Tor<T>
-    where T: Clone
-{
-    type Item = T;
-    fn next(&mut self) -> Option<T> {
-        let value = if self.current_index == self.end_index {
-            None
-        } else {
-            Some(self.data[self.current_index].clone())
-        };
-        self.current_index = self.increment_index(self.current_index);
-        value
+        self.data.push_front(value);
+        self.data.pop_back();
     }
 }
 
@@ -145,7 +112,7 @@ impl Snake {
                                 Direction::Down,
                                 Direction::Down,
                                 Direction::Down,
-                                Direction::Right]),
+                                Direction::Right].into_iter().collect()),
         }
     }
     fn crawl(&mut self, direction: Direction) {
