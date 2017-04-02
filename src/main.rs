@@ -33,15 +33,15 @@ enum Status {
 	Quit,
 }
 
-struct Board {
+struct Game {
     n_cols: isize,
     snakes_position: (isize, isize),
     snake: Snake,
 }
 
-impl Board {
-    fn new(size: isize) -> Board {
-        Board {
+impl Game {
+    fn new(size: isize) -> Game {
+        Game {
             n_cols: size,
             snakes_position: (size / 2, size / 2),
             snake: Snake::new(),
@@ -70,7 +70,7 @@ impl Board {
                  })
             .collect::<Vec<_>>()
     }
-    fn data(&self) -> Vec<matrix_display::cell::Cell<char>> {
+    fn board(&self) -> Vec<matrix_display::cell::Cell<char>> {
         let body = self.snake_body();
         (0..self.n_cols * self.n_cols)
             .map(|i| (i % self.n_cols, i / self.n_cols))
@@ -129,8 +129,8 @@ impl Snake {
     }
 }
 
-fn print_board<W>(board: &Board, stdout: &mut W) where W: Write {
-    let data = matrix::Matrix::new(board.n_cols() as usize, board.data());
+fn print_game<W>(game: &Game, stdout: &mut W) where W: Write {
+    let data = matrix::Matrix::new(game.n_cols() as usize, game.board());
     let format = Format::new(3, 1);
     let display = MatrixDisplay::new(format, data);
     write!(stdout,
@@ -147,9 +147,9 @@ fn main() {
     let mut stdin = termion::async_stdin().events();
     let mut stdout = stdout().into_raw_mode().unwrap();
 
-    let mut board = Board::new(22);
-    board.snake = Snake::new();
-    print_board(&board, &mut stdout);
+    let mut game = Game::new(22);
+    game.snake = Snake::new();
+    print_game(&game, &mut stdout);
     loop {
         if let Some(evt) = stdin.next() {
             let status = match evt.unwrap() {
@@ -157,16 +157,16 @@ fn main() {
                     Status::Quit
                 }
                 Event::Key(Key::Up) => {
-                    board.process_input(Direction::Up)
+                    game.process_input(Direction::Up)
                 }
                 Event::Key(Key::Down) => {
-                    board.process_input(Direction::Down)
+                    game.process_input(Direction::Down)
                 }
                 Event::Key(Key::Left) => {
-                    board.process_input(Direction::Left)
+                    game.process_input(Direction::Left)
                 }
                 Event::Key(Key::Right) => {
-                    board.process_input(Direction::Right)
+                    game.process_input(Direction::Right)
                 }
                 _ => Status::Alive,
             };
@@ -175,7 +175,7 @@ fn main() {
 				Status::Dead => { break; },
 				Status::Alive => (),
 			};
-    		print_board(&board, &mut stdout);
+    		print_game(&game, &mut stdout);
         }
         std::thread::sleep(std::time::Duration::from_millis(10));
     }
