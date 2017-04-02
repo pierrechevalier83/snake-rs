@@ -121,12 +121,7 @@ impl Snake {
     }
 }
 
-fn main() {
-    let mut stdin = termion::async_stdin().events();
-    let mut stdout = stdout().into_raw_mode().unwrap();
-
-    let mut board = Board::new(22);
-    board.snake = Snake::new();
+fn print_board<W>(board: &Board, stdout: &mut W) where W: Write {
     let data = matrix::Matrix::new(board.n_cols() as usize, board.data());
     let format = Format::new(3, 1);
     let display = MatrixDisplay::new(format, data);
@@ -136,9 +131,17 @@ fn main() {
            termion::cursor::Hide,
            termion::cursor::Goto(1, 1))
             .unwrap();
-    display.print(&mut stdout, &style::BordersStyle::None);
+    display.print(stdout, &style::BordersStyle::None);
     stdout.flush().unwrap();
+}
 
+fn main() {
+    let mut stdin = termion::async_stdin().events();
+    let mut stdout = stdout().into_raw_mode().unwrap();
+
+    let mut board = Board::new(22);
+    board.snake = Snake::new();
+    print_board(&board, &mut stdout);
     loop {
         if let Some(evt) = stdin.next() {
             match evt.unwrap() {
@@ -159,17 +162,8 @@ fn main() {
                 }
                 _ => (),
             };
-            let data = matrix::Matrix::new(board.n_cols() as usize, board.data());
-            let disp = MatrixDisplay::new(Format::new(3, 1), data);
-            write!(stdout,
-                   "{}{}{}",
-                   termion::clear::All,
-                   termion::cursor::Hide,
-                   termion::cursor::Goto(1, 1))
-                    .unwrap();
-            disp.print(&mut stdout, &style::BordersStyle::None);
+    		print_board(&board, &mut stdout);
         }
         std::thread::sleep(std::time::Duration::from_millis(10));
-        stdout.flush().unwrap();
     }
 }
