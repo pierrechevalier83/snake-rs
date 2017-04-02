@@ -30,7 +30,6 @@ fn move_point(direction: &Direction, (x, y): (&mut isize, &mut isize), bounds: (
 enum Status {
     Alive,
 	Dead,
-	Quit,
 }
 
 struct Game {
@@ -50,7 +49,7 @@ impl Game {
     fn n_cols(&self) -> isize {
         self.n_cols
     }
-    fn process_input(&mut self, direction: Direction) -> Status {
+    fn process_input(&mut self, direction: &Direction) -> Status {
         move_point(&direction, (&mut self.snakes_position.0, &mut self.snakes_position.1), (self.n_cols, self.n_cols));
         self.snake.crawl(direction);
 		if self.snake_body().iter().skip(1).collect::<Vec<_>>().contains(&&self.snakes_position) {
@@ -93,8 +92,8 @@ enum Direction {
     Right,
 }
 
-fn opposite(dir: Direction) -> Direction {
-    match dir {
+fn opposite(dir: &Direction) -> Direction {
+    match *dir {
         Direction::Up => Direction::Down,
         Direction::Down => Direction::Up,
         Direction::Left => Direction::Right,
@@ -123,7 +122,7 @@ impl Snake {
                     .collect(),
         }
     }
-    fn crawl(&mut self, direction: Direction) {
+    fn crawl(&mut self, direction: &Direction) {
         self.body.push_front(opposite(direction));
         self.body.pop_back();
     }
@@ -150,33 +149,34 @@ fn main() {
     let mut game = Game::new(22);
     game.snake = Snake::new();
     print_game(&game, &mut stdout);
-    loop {
+    let mut direction = Direction::Right;
+	loop {
         if let Some(evt) = stdin.next() {
-            let status = match evt.unwrap() {
+            match evt.unwrap() {
                 Event::Key(Key::Char('q')) => {
-                    Status::Quit
+                    break;
                 }
                 Event::Key(Key::Up) => {
-                    game.process_input(Direction::Up)
+				    direction = Direction::Up;
                 }
                 Event::Key(Key::Down) => {
-                    game.process_input(Direction::Down)
+                    direction = Direction::Down;
                 }
                 Event::Key(Key::Left) => {
-                    game.process_input(Direction::Left)
+                    direction = Direction::Left;
                 }
                 Event::Key(Key::Right) => {
-                    game.process_input(Direction::Right)
+                    direction = Direction::Right;
                 }
-                _ => Status::Alive,
+                _ => (),
             };
-			match status {
-			    Status::Quit => { break; },
-				Status::Dead => { break; },
-				Status::Alive => (),
-			};
-    		print_game(&game, &mut stdout);
         }
-        std::thread::sleep(std::time::Duration::from_millis(10));
+		let status = game.process_input(&direction);
+		match status {
+			Status::Dead => { break; },
+			Status::Alive => (),
+		};
+    	print_game(&game, &mut stdout);
+        std::thread::sleep(std::time::Duration::from_millis(100));
     }
 }
