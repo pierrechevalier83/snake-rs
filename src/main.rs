@@ -30,7 +30,7 @@ impl Board {
         self.snake
             .body
             .clone()
-            .data.into_iter()
+            .into_iter()
             .map(|x| {
                 pos = match x {
                     // TODO: deal with walls
@@ -76,47 +76,27 @@ fn opposite(dir: Direction) -> Direction {
 }
 
 #[derive(Clone)]
-struct Tor<T>
-    where T: Clone
-{
-    data: VecDeque<T>,
-}
-
-impl<T> Tor<T>
-    where T: Clone
-{
-    fn new(v: VecDeque<T>) -> Tor<T> {
-        Tor {
-            data: v,
-        }
-    }
-    fn insert(&mut self, value: T) {
-        self.data.push_front(value);
-        self.data.pop_back();
-    }
-}
-
-#[derive(Clone)]
 struct Snake {
-    body: Tor<Direction>,
+    body: VecDeque<Direction>,
 }
 
 impl Snake {
     fn new() -> Snake {
         Snake {
-            body: Tor::new(vec![Direction::Left,
-                                Direction::Up,
-                                Direction::Left,
-                                Direction::Left,
-                                Direction::Left,
-                                Direction::Down,
-                                Direction::Down,
-                                Direction::Down,
-                                Direction::Right].into_iter().collect()),
+            body: vec![Direction::Left,
+                       Direction::Up,
+                       Direction::Left,
+                       Direction::Left,
+                       Direction::Left,
+                       Direction::Down,
+                       Direction::Down,
+                       Direction::Down,
+                       Direction::Right].into_iter().collect()
         }
     }
     fn crawl(&mut self, direction: Direction) {
-        self.body.insert(opposite(direction));
+        self.body.push_front(opposite(direction));
+        self.body.pop_back();
     }
 }
 
