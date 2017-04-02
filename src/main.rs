@@ -10,7 +10,7 @@ use std::collections::VecDeque;
 
 struct Board {
     n_cols: usize,
-    snakes_position: usize,
+    snakes_position: (usize, usize),
     snake: Snake,
 }
 
@@ -18,37 +18,45 @@ impl Board {
     fn new(size: usize) -> Board {
         Board {
             n_cols: size,
-            snakes_position: size * size / 2 + size / 2,
+            snakes_position: (size / 2, size / 2),
             snake: Snake::new(),
         }
     }
     fn n_cols(&self) -> usize {
         self.n_cols
     }
-    fn snake_body(&self) -> Vec<usize> {
-        let mut pos = self.snakes_position;
+    fn snake_body(&self) -> Vec<(usize, usize)> {
+        let (mut x, mut y) = self.snakes_position;
         self.snake
             .body
             .iter()
-            .map(|x| {
-                pos = match x {
+            .map(|dir| {
+                match dir {
                     // TODO: deal with collisions
-                    &Direction::Left => pos - 1,
-                    &Direction::Right => pos + 1,
-                    &Direction::Up => pos - self.n_cols,
-                    &Direction::Down => pos + self.n_cols,
+                    &Direction::Left => {
+                        x -= 1;
+                    }
+                    &Direction::Right => {
+                        x += 1;
+                    }
+                    &Direction::Up => {
+                        y -= 1;
+                    }
+                    &Direction::Down => {
+                        y += 1;
+                    }
                 };
-                pos
-
+                (x, y)
             })
             .collect::<Vec<_>>()
     }
     fn data(&self) -> Vec<matrix_display::cell::Cell<char>> {
         let body = self.snake_body();
         (0..self.n_cols * self.n_cols)
-            .map(|x| if x == self.snakes_position {
+            .map(|i| (i % self.n_cols, i / self.n_cols))
+            .map(|pos| if pos == self.snakes_position {
                      cell::Cell::new('@', 4, 8)
-                 } else if body.contains(&x) {
+                 } else if body.contains(&pos) {
                 cell::Cell::new('o', 15, 8)
             } else {
                 cell::Cell::new(' ', 0, 8)
