@@ -29,15 +29,14 @@ impl Board {
         let mut pos = self.snakes_position;
         self.snake
             .body
-            .clone()
-            .into_iter()
+            .iter()
             .map(|x| {
                 pos = match x {
                     // TODO: deal with collisions
-                    Direction::Left => pos - 1,
-                    Direction::Right => pos + 1,
-                    Direction::Up => pos - self.n_cols,
-                    Direction::Down => pos + self.n_cols,
+                    &Direction::Left => pos - 1,
+                    &Direction::Right => pos + 1,
+                    &Direction::Up => pos - self.n_cols,
+                    &Direction::Down => pos + self.n_cols,
                 };
                 pos
 
