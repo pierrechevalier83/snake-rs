@@ -47,6 +47,9 @@ impl Board {
     fn process_input(&mut self, direction: Direction) {
         move_point(&direction, (&mut self.snakes_position.0, &mut self.snakes_position.1), (self.n_cols, self.n_cols));
         self.snake.crawl(direction);
+		if self.snake_body().iter().skip(1).collect::<Vec<_>>().contains(&&self.snakes_position) {
+		    panic!("Snake died a painful death!");
+		}
     }
     fn snake_body(&self) -> Vec<(isize, isize)> {
         let (mut x, mut y) = self.snakes_position;
@@ -54,7 +57,6 @@ impl Board {
             .body
             .iter()
             .map(|dir| {
-                     // TODO: deal with collisions
                      move_point(dir, (&mut x, &mut y), (self.n_cols, self.n_cols));
                      (x, y)
                  })
