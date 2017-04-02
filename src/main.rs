@@ -33,7 +33,7 @@ impl Board {
             .into_iter()
             .map(|x| {
                 pos = match x {
-                    // TODO: deal with walls
+                    // TODO: deal with collisions
                     Direction::Left => pos - 1,
                     Direction::Right => pos + 1,
                     Direction::Up => pos - self.n_cols,
@@ -91,7 +91,9 @@ impl Snake {
                        Direction::Down,
                        Direction::Down,
                        Direction::Down,
-                       Direction::Right].into_iter().collect()
+                       Direction::Right]
+                    .into_iter()
+                    .collect(),
         }
     }
     fn crawl(&mut self, direction: Direction) {
