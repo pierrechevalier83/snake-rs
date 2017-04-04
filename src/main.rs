@@ -15,7 +15,7 @@ fn wrap_inc(x: &mut isize, n: isize) {
 
 fn wrap_dec(x: &mut isize, n: isize) {
     // Workaround strange behaviour of modulo operator in rust:
-	// -1 % 10 returns -1 instead of 9!!!
+    // -1 % 10 returns -1 instead of 9!!!
     *x = ((*x - 1) + n) % n;
 }
 
@@ -30,14 +30,14 @@ fn move_point(direction: &Direction, (x, y): (&mut isize, &mut isize), bounds: (
 
 enum Status {
     Alive,
-	Dead,
+    Dead,
 }
 
 struct Game {
     n_cols: isize,
     snakes_position: (isize, isize),
     snake: Snake,
-	apples: HashSet<(isize, isize)>,
+    apples: HashSet<(isize, isize)>,
 }
 
 impl Game {
@@ -46,30 +46,40 @@ impl Game {
             n_cols: size,
             snakes_position: (size / 2, size / 2),
             snake: Snake::new(),
-			apples: HashSet::new(),
+            apples: HashSet::new(),
         }
     }
     fn n_cols(&self) -> isize {
         self.n_cols
     }
     fn randomly_spawn_objects(&mut self) {
-	    if rand::random::<isize>() % 5 == 1 {
-		    self.apples.insert((rand::random::<isize>() % self.n_cols, rand::random::<isize>() % self.n_cols));
-		}
-	}
-    fn process_input(&mut self, direction: &Direction) -> Status {
-        move_point(&direction, (&mut self.snakes_position.0, &mut self.snakes_position.1), (self.n_cols, self.n_cols));
+        if rand::random::<isize>() % 5 == 1 {
+            self.apples.insert((rand::random::<isize>() % self.n_cols,
+                                rand::random::<isize>() % self.n_cols));
+        }
+    }
+    fn process_input(&mut self, direction: &mut Direction) -> Status {
+        if *direction == opposite(&self.snake.direction()) {
+            *direction = self.snake.direction()
+        }
+        move_point(&direction,
+                   (&mut self.snakes_position.0, &mut self.snakes_position.1),
+                   (self.n_cols, self.n_cols));
         if self.apples.contains(&self.snakes_position) {
-        	self.apples.remove(&self.snakes_position);
-			self.snake.grow(direction);
-		} else {
-			self.snake.crawl(direction);
-		}
-		if self.snake_body().iter().skip(1).collect::<Vec<_>>().contains(&&self.snakes_position) {
-		    Status::Dead
-		} else {
-		    Status::Alive
-		}
+            self.apples.remove(&self.snakes_position);
+            self.snake.grow(direction);
+        } else {
+            self.snake.crawl(direction);
+        }
+        if self.snake_body()
+               .iter()
+               .skip(1)
+               .collect::<Vec<_>>()
+               .contains(&&self.snakes_position) {
+            Status::Dead
+        } else {
+            Status::Alive
+        }
     }
     fn snake_body(&self) -> Vec<(isize, isize)> {
         let (mut x, mut y) = self.snakes_position;
@@ -94,12 +104,12 @@ impl Game {
                 cell::Cell::new('$', 1, 232)
             } else {
                 cell::Cell::new(' ', 0, 232)
-			})
+            })
             .collect::<Vec<_>>()
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 enum Direction {
     Up,
     Down,
@@ -123,11 +133,7 @@ struct Snake {
 
 impl Snake {
     fn new() -> Snake {
-        Snake {
-            body: vec![Direction::Left; 3]
-                    .into_iter()
-                    .collect(),
-        }
+        Snake { body: vec![Direction::Left; 3].into_iter().collect() }
     }
     fn crawl(&mut self, direction: &Direction) {
         self.grow(direction);
@@ -136,10 +142,14 @@ impl Snake {
     fn grow(&mut self, direction: &Direction) {
         self.body.push_front(opposite(direction));
     }
-
+    fn direction(&self) -> Direction {
+        opposite(self.body.front().unwrap())
+    }
 }
 
-fn print_game<W>(game: &Game, stdout: &mut W) where W: Write {
+fn print_game<W>(game: &Game, stdout: &mut W)
+    where W: Write
+{
     let data = matrix::Matrix::new(game.n_cols() as usize, game.board());
     let format = Format::new(3, 1);
     let display = MatrixDisplay::new(format, data);
@@ -161,14 +171,14 @@ fn main() {
     game.snake = Snake::new();
     print_game(&game, &mut stdout);
     let mut direction = Direction::Right;
-	loop {
+    loop {
         if let Some(evt) = stdin.next() {
             match evt.unwrap() {
                 Event::Key(Key::Char('q')) => {
                     break;
                 }
                 Event::Key(Key::Up) => {
-				    direction = Direction::Up;
+                    direction = Direction::Up;
                 }
                 Event::Key(Key::Down) => {
                     direction = Direction::Down;
@@ -183,12 +193,14 @@ fn main() {
             };
         }
         game.randomly_spawn_objects();
-		let status = game.process_input(&direction);
-		match status {
-			Status::Dead => { break; },
-			Status::Alive => (),
-		};
-    	print_game(&game, &mut stdout);
-		std::thread::sleep(std::time::Duration::from_millis(100));
+        let status = game.process_input(&mut direction);
+        match status {
+            Status::Dead => {
+                break;
+            }
+            Status::Alive => (),
+        };
+        print_game(&game, &mut stdout);
+        std::thread::sleep(std::time::Duration::from_millis(100));
     }
 }
