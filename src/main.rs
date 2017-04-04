@@ -1,4 +1,5 @@
 extern crate matrix_display;
+extern crate rand;
 extern crate termion;
 
 use matrix_display::*;
@@ -6,7 +7,7 @@ use termion::event::{Key, Event};
 use termion::input::TermRead;
 use termion::raw::IntoRawMode;
 use std::io::{Write, stdout};
-use std::collections::VecDeque;
+use std::collections::{HashSet, VecDeque};
 
 fn wrap_inc(x: &mut isize, n: isize) {
     *x = (*x + 1) % n;
@@ -36,6 +37,7 @@ struct Game {
     n_cols: isize,
     snakes_position: (isize, isize),
     snake: Snake,
+	apples: HashSet<(isize, isize)>,
 }
 
 impl Game {
@@ -44,14 +46,25 @@ impl Game {
             n_cols: size,
             snakes_position: (size / 2, size / 2),
             snake: Snake::new(),
+			apples: HashSet::new(),
         }
     }
     fn n_cols(&self) -> isize {
         self.n_cols
     }
+    fn randomly_spawn_objects(&mut self) {
+	    if rand::random::<isize>() % 5 == 1 {
+		    self.apples.insert((rand::random::<isize>() % self.n_cols, rand::random::<isize>() % self.n_cols));
+		}
+	}
     fn process_input(&mut self, direction: &Direction) -> Status {
         move_point(&direction, (&mut self.snakes_position.0, &mut self.snakes_position.1), (self.n_cols, self.n_cols));
-        self.snake.crawl(direction);
+        if self.apples.contains(&self.snakes_position) {
+        	self.apples.remove(&self.snakes_position);
+			self.snake.grow(direction);
+		} else {
+			self.snake.crawl(direction);
+		}
 		if self.snake_body().iter().skip(1).collect::<Vec<_>>().contains(&&self.snakes_position) {
 		    Status::Dead
 		} else {
@@ -74,12 +87,14 @@ impl Game {
         (0..self.n_cols * self.n_cols)
             .map(|i| (i % self.n_cols, i / self.n_cols))
             .map(|pos| if pos == self.snakes_position {
-                     cell::Cell::new('@', 4, 8)
+                     cell::Cell::new('@', 4, 232)
                  } else if body.contains(&pos) {
-                cell::Cell::new('o', 15, 8)
+                cell::Cell::new('o', 15, 232)
+            } else if self.apples.contains(&pos) {
+                cell::Cell::new('$', 1, 232)
             } else {
-                cell::Cell::new(' ', 0, 8)
-            })
+                cell::Cell::new(' ', 0, 232)
+			})
             .collect::<Vec<_>>()
     }
 }
@@ -109,23 +124,19 @@ struct Snake {
 impl Snake {
     fn new() -> Snake {
         Snake {
-            body: vec![Direction::Left,
-                       Direction::Up,
-                       Direction::Left,
-                       Direction::Left,
-                       Direction::Left,
-                       Direction::Down,
-                       Direction::Down,
-                       Direction::Down,
-                       Direction::Right]
+            body: vec![Direction::Left; 3]
                     .into_iter()
                     .collect(),
         }
     }
     fn crawl(&mut self, direction: &Direction) {
-        self.body.push_front(opposite(direction));
+        self.grow(direction);
         self.body.pop_back();
     }
+    fn grow(&mut self, direction: &Direction) {
+        self.body.push_front(opposite(direction));
+    }
+
 }
 
 fn print_game<W>(game: &Game, stdout: &mut W) where W: Write {
@@ -171,12 +182,13 @@ fn main() {
                 _ => (),
             };
         }
+        game.randomly_spawn_objects();
 		let status = game.process_input(&direction);
 		match status {
 			Status::Dead => { break; },
 			Status::Alive => (),
 		};
     	print_game(&game, &mut stdout);
-        std::thread::sleep(std::time::Duration::from_millis(100));
+		std::thread::sleep(std::time::Duration::from_millis(100));
     }
 }
