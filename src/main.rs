@@ -1,4 +1,5 @@
 extern crate matrix_display;
+extern crate num;
 extern crate rand;
 extern crate termion;
 
@@ -9,14 +10,23 @@ use termion::raw::IntoRawMode;
 use std::io::{Write, stdout};
 use std::collections::{HashSet, VecDeque};
 
+/// Workaround strange behaviour of % operator in rust:
+/// -1 % 10 returns -1 instead of 9!!!
+fn modulo<T>(x: T, n: T) -> T where T: num::PrimInt {
+    let m = x.rem(n);
+	if m < T::zero() {
+		m + n
+	} else {
+		m
+	}
+}
+
 fn wrap_inc(x: &mut isize, n: isize) {
-    *x = (*x + 1) % n;
+    *x = modulo(*x + 1, n);
 }
 
 fn wrap_dec(x: &mut isize, n: isize) {
-    // Workaround strange behaviour of modulo operator in rust:
-    // -1 % 10 returns -1 instead of 9!!!
-    *x = ((*x - 1) + n) % n;
+    *x = modulo(*x - 1, n);
 }
 
 fn move_point(direction: &Direction, (x, y): (&mut isize, &mut isize), bounds: (isize, isize)) {
@@ -53,9 +63,9 @@ impl Game {
         self.n_cols
     }
     fn randomly_spawn_objects(&mut self) {
-        if rand::random::<isize>() % 5 == 1 {
-            self.apples.insert((rand::random::<isize>() % self.n_cols,
-                                rand::random::<isize>() % self.n_cols));
+        if modulo(rand::random::<isize>(), 50) == 1 {
+            self.apples.insert((modulo(rand::random::<isize>(), self.n_cols),
+                                modulo(rand::random::<isize>(), self.n_cols)));
         }
     }
     fn process_input(&mut self, direction: &mut Direction) -> Status {
@@ -95,7 +105,7 @@ impl Game {
     fn board(&self) -> Vec<matrix_display::cell::Cell<char>> {
         let body = self.snake_body();
         (0..self.n_cols * self.n_cols)
-            .map(|i| (i % self.n_cols, i / self.n_cols))
+            .map(|i| (modulo(i, self.n_cols), i / self.n_cols))
             .map(|pos| if pos == self.snakes_position {
                      cell::Cell::new('@', 4, 232)
                  } else if body.contains(&pos) {
