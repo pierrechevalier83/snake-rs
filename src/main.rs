@@ -106,15 +106,16 @@ impl Game {
         let body = self.snake_body();
         (0..self.n_cols * self.n_cols)
             .map(|i| (modulo(i, self.n_cols), i / self.n_cols))
-            .map(|pos| if pos == self.snakes_position {
-                     cell::Cell::new('@', 4, 232)
+            .map(|pos|
+                 if pos == self.snakes_position {
+                     cell::Cell::new('▣', 4, 232)
                  } else if body.contains(&pos) {
-                cell::Cell::new('o', 15, 232)
-            } else if self.apples.contains(&pos) {
-                cell::Cell::new('$', 1, 232)
-            } else {
-                cell::Cell::new(' ', 0, 232)
-            })
+                     cell::Cell::new('◼', 15, 232)
+                 } else if self.apples.contains(&pos) {
+                     cell::Cell::new('🍎', 1, 232)
+                 } else {
+                     cell::Cell::new(' ', 0, 232)
+                 })
             .collect::<Vec<_>>()
     }
 }
