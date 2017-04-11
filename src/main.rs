@@ -8,7 +8,7 @@ use termion::event::{Key, Event};
 use termion::input::TermRead;
 use termion::raw::IntoRawMode;
 use std::io::{Write, stdout};
-use std::collections::{HashSet, VecDeque};
+use std::collections::{HashMap, VecDeque};
 
 /// Workaround strange behaviour of % operator in rust:
 /// -1 % 10 returns -1 instead of 9!!!
@@ -43,11 +43,29 @@ enum Status {
     Dead,
 }
 
+fn get_random_fruit() -> char {
+    match modulo(rand::random::<usize>(), 11) {
+        0 => '🍇', // grapes
+        1 => '🍈', // melon
+        2 => '🍉', // watermelon
+        3 => '🍊', // tangerine
+        4 => '🍋', // lemon
+        5 => '🍍', // pineapple
+        6 => '🍎', // red apple
+        7 => '🍏', // green apple
+        8 => '🍐', // pear
+        9 => '🍑', // peach
+        10 => '🍒', // cherries
+        11 => '🍓', // strawberry
+        _ => ' ',
+    }
+}
+
 struct Game {
     n_cols: isize,
     snakes_position: (isize, isize),
     snake: Snake,
-    apples: HashSet<(isize, isize)>,
+    fruits: HashMap<(isize, isize), char>,
 }
 
 impl Game {
@@ -56,7 +74,7 @@ impl Game {
             n_cols: size,
             snakes_position: (size / 2, size / 2),
             snake: Snake::new(),
-            apples: HashSet::new(),
+            fruits: HashMap::new(),
         }
     }
     fn n_cols(&self) -> isize {
@@ -64,8 +82,9 @@ impl Game {
     }
     fn randomly_spawn_objects(&mut self) {
         if modulo(rand::random::<isize>(), 50) == 1 {
-            self.apples.insert((modulo(rand::random::<isize>(), self.n_cols),
-                                modulo(rand::random::<isize>(), self.n_cols)));
+            self.fruits.insert((modulo(rand::random::<isize>(), self.n_cols),
+                                modulo(rand::random::<isize>(), self.n_cols)),
+                                get_random_fruit());
         }
     }
     fn process_input(&mut self, direction: &mut Direction) -> Status {
@@ -75,8 +94,8 @@ impl Game {
         move_point(&direction,
                    (&mut self.snakes_position.0, &mut self.snakes_position.1),
                    (self.n_cols, self.n_cols));
-        if self.apples.contains(&self.snakes_position) {
-            self.apples.remove(&self.snakes_position);
+        if self.fruits.contains_key(&self.snakes_position) {
+            self.fruits.remove(&self.snakes_position);
             self.snake.grow(direction);
         } else {
             self.snake.crawl(direction);
@@ -111,8 +130,8 @@ impl Game {
                      cell::Cell::new('▣', 4, 232)
                  } else if body.contains(&pos) {
                      cell::Cell::new('◼', 15, 232)
-                 } else if self.apples.contains(&pos) {
-                     cell::Cell::new('🍎', 1, 232)
+                 } else if self.fruits.contains_key(&pos) {
+                     cell::Cell::new(self.fruits[&pos], modulo(rand::random::<u8>(), 16), 232)
                  } else {
                      cell::Cell::new(' ', 0, 232)
                  })
