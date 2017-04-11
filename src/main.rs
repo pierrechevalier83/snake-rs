@@ -44,21 +44,9 @@ enum Status {
 }
 
 fn get_random_fruit() -> char {
-    match modulo(rand::random::<usize>(), 11) {
-        0 => '🍇', // grapes
-        1 => '🍈', // melon
-        2 => '🍉', // watermelon
-        3 => '🍊', // tangerine
-        4 => '🍋', // lemon
-        5 => '🍍', // pineapple
-        6 => '🍎', // red apple
-        7 => '🍏', // green apple
-        8 => '🍐', // pear
-        9 => '🍑', // peach
-        10 => '🍒', // cherries
-        11 => '🍓', // strawberry
-        _ => ' ',
-    }
+    let fruits = vec!['🍇', '🍈', '🍉', '🍊', '🍋', '🍍', '🍎', '🍏', '🍐', '🍑', '🍒', '🍓'];
+    use rand::Rng;
+    rand::thread_rng().choose(&fruits).unwrap().clone()
 }
 
 struct Game {
