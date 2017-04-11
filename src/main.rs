@@ -173,11 +173,18 @@ fn print_game<W>(game: &Game, stdout: &mut W)
     stdout.flush().unwrap();
 }
 
+fn pick_a_size() -> isize {
+    match termion::terminal_size() {
+        Ok((n_cols, n_rows)) => std::cmp::min((n_cols / 3) as isize, std::cmp::min(n_rows as isize, 40)),
+        Err(_) => 20,
+    }
+}
+
 fn main() {
     let mut stdin = termion::async_stdin().events();
     let mut stdout = stdout().into_raw_mode().unwrap();
 
-    let mut game = Game::new(22);
+    let mut game = Game::new(pick_a_size());
     game.snake = Snake::new();
     print_game(&game, &mut stdout);
     let mut direction = Direction::Right;
