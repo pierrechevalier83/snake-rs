@@ -208,15 +208,23 @@ fn main() {
                 Event::Key(Key::Char('q')) => {
                     break;
                 }
+                Event::Key(Key::Char('w')) |
+                Event::Key(Key::Char('k')) |
                 Event::Key(Key::Up) => {
                     direction = Direction::Up;
                 }
+                Event::Key(Key::Char('s')) |
+                Event::Key(Key::Char('j')) |
                 Event::Key(Key::Down) => {
                     direction = Direction::Down;
                 }
+                Event::Key(Key::Char('a')) |
+                Event::Key(Key::Char('h')) |
                 Event::Key(Key::Left) => {
                     direction = Direction::Left;
                 }
+                Event::Key(Key::Char('d')) |
+                Event::Key(Key::Char('l')) |
                 Event::Key(Key::Right) => {
                     direction = Direction::Right;
                 }
