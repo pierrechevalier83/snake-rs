@@ -39,7 +39,8 @@ fn move_point(direction: &Direction, (x, y): (&mut isize, &mut isize), bounds: (
 }
 
 enum Status {
-    Alive,
+    Hungry,
+    Fed,
     Dead,
 }
 
@@ -82,9 +83,11 @@ impl Game {
         move_point(&direction,
                    (&mut self.snakes_position.0, &mut self.snakes_position.1),
                    (self.n_cols, self.n_cols));
+        let mut status = Status::Hungry;
         if self.fruits.contains_key(&self.snakes_position) {
             self.fruits.remove(&self.snakes_position);
             self.snake.grow(direction);
+            status = Status::Fed;
         } else {
             self.snake.crawl(direction);
         }
@@ -93,10 +96,9 @@ impl Game {
                .skip(1)
                .collect::<Vec<_>>()
                .contains(&&self.snakes_position) {
-            Status::Dead
-        } else {
-            Status::Alive
+            status = Status::Dead
         }
+        status
     }
     fn snake_body(&self) -> Vec<(isize, isize)> {
         let (mut x, mut y) = self.snakes_position;
@@ -199,6 +201,7 @@ fn main() {
     game.snake = Snake::new();
     print_game(&game, &mut stdout);
     let mut direction = Direction::Right;
+    let mut speed = 100;
     loop {
         if let Some(evt) = stdin.next() {
             match evt.unwrap() {
@@ -226,9 +229,13 @@ fn main() {
             Status::Dead => {
                 break;
             }
-            Status::Alive => (),
+            Status::Fed => {
+                // increase the speed every time a fruit is eaten
+                speed += 1;
+            }
+            Status::Hungry => (),
         };
         print_game(&game, &mut stdout);
-        std::thread::sleep(std::time::Duration::from_millis(100));
+        std::thread::sleep(std::time::Duration::from_millis((10000 / speed) as u64));
     }
 }
