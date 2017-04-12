@@ -110,18 +110,21 @@ impl Game {
             .collect::<Vec<_>>()
     }
     fn board(&self) -> Vec<matrix_display::cell::Cell<char>> {
+        let bg_col = 233;
+        let head_col = 21;
+        let body_col = 32;
         let body = self.snake_body();
         (0..self.n_cols * self.n_cols)
             .map(|i| (modulo(i, self.n_cols), i / self.n_cols))
             .map(|pos|
                  if pos == self.snakes_position {
-                     cell::Cell::new('▣', 4, 232)
+                     cell::Cell::new('▣', head_col, bg_col)
                  } else if body.contains(&pos) {
-                     cell::Cell::new('◼', 15, 232)
+                     cell::Cell::new('◼', body_col, bg_col)
                  } else if self.fruits.contains_key(&pos) {
-                     cell::Cell::new(self.fruits[&pos], modulo(rand::random::<u8>(), 16), 232)
+                     cell::Cell::new(self.fruits[&pos], modulo(rand::random::<u8>(), 16), bg_col)
                  } else {
-                     cell::Cell::new(' ', 0, 232)
+                     cell::Cell::new(' ', bg_col, bg_col)
                  })
             .collect::<Vec<_>>()
     }
