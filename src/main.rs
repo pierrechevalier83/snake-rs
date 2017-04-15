@@ -10,6 +10,8 @@ use termion::raw::IntoRawMode;
 use std::io::{Write, stdout};
 use std::collections::{HashMap, VecDeque};
 
+mod fruit;
+
 /// Workaround strange behaviour of % operator in rust:
 /// -1 % 10 returns -1 instead of 9!!!
 fn modulo<T>(x: T, n: T) -> T where T: num::PrimInt {
@@ -44,17 +46,11 @@ enum Status {
     Dead,
 }
 
-fn get_random_fruit() -> char {
-    let fruits = vec!['🍇', '🍈', '🍉', '🍊', '🍋', '🍍', '🍎', '🍏', '🍐', '🍑', '🍒', '🍓'];
-    use rand::Rng;
-    rand::thread_rng().choose(&fruits).unwrap().clone()
-}
-
 struct Game {
     n_cols: isize,
     snakes_position: (isize, isize),
     snake: Snake,
-    fruits: HashMap<(isize, isize), char>,
+    fruits: HashMap<(isize, isize), fruit::Fruit>,
 }
 
 impl Game {
@@ -73,7 +69,7 @@ impl Game {
         if modulo(rand::random::<isize>(), 50) == 1 {
             self.fruits.insert((modulo(rand::random::<isize>(), self.n_cols),
                                 modulo(rand::random::<isize>(), self.n_cols)),
-                                get_random_fruit());
+                                fruit::get_random_fruit());
         }
     }
     fn process_input(&mut self, direction: &mut Direction) -> Status {
@@ -124,7 +120,7 @@ impl Game {
                  } else if body.contains(&pos) {
                      cell::Cell::new('◼', body_col, bg_col)
                  } else if self.fruits.contains_key(&pos) {
-                     cell::Cell::new(self.fruits[&pos], modulo(rand::random::<u8>(), 16), bg_col)
+                     cell::Cell::new(self.fruits[&pos].symbol, self.fruits[&pos].color, bg_col)
                  } else {
                      cell::Cell::new(' ', bg_col, bg_col)
                  })
