@@ -65,12 +65,10 @@ impl Game {
     fn n_cols(&self) -> isize {
         self.n_cols
     }
-    fn randomly_spawn_objects(&mut self) {
-        if modulo(rand::random::<isize>(), 50) == 1 {
-            self.fruits.insert((modulo(rand::random::<isize>(), self.n_cols),
-                                modulo(rand::random::<isize>(), self.n_cols)),
-                                fruit::get_random_fruit());
-        }
+    fn spawn_fruit(&mut self) {
+        self.fruits.insert((modulo(rand::random::<isize>(), self.n_cols),
+                            modulo(rand::random::<isize>(), self.n_cols)),
+                            fruit::get_random_fruit());
     }
     fn process_input(&mut self, direction: &mut Direction) -> Status {
         if *direction == opposite(&self.snake.direction()) {
@@ -195,6 +193,7 @@ fn main() {
 
     let mut game = Game::new(pick_a_size());
     game.snake = Snake::new();
+    game.spawn_fruit();
     print_game(&game, &mut stdout);
     let mut direction = Direction::Right;
     let mut speed = 100;
@@ -227,7 +226,6 @@ fn main() {
                 _ => (),
             };
         }
-        game.randomly_spawn_objects();
         let status = game.process_input(&mut direction);
         match status {
             Status::Dead => {
@@ -236,6 +234,7 @@ fn main() {
             Status::Fed => {
                 // increase the speed every time a fruit is eaten
                 speed += 1;
+                game.spawn_fruit();
             }
             Status::Hungry => (),
         };
