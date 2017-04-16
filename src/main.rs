@@ -32,6 +32,7 @@ fn print_game<W>(game: &Game, stdout: &mut W)
            termion::cursor::Hide,
            termion::cursor::Goto(1, 1))
             .unwrap();
+    write!(stdout, "{}Score: {} \r\n", termion::color::Bg(termion::color::AnsiValue(233)), game.score()).unwrap();
     display.print(stdout, &style::BordersStyle::None);
     stdout.flush().unwrap();
 }

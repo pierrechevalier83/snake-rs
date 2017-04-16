@@ -18,6 +18,7 @@ pub struct Game {
     size: Point<isize>,
     snake: (Point<isize>, Snake),
     fruit: (Point<isize>, fruit::Fruit),
+    score: i32,
 }
 
 impl Game {
@@ -26,6 +27,7 @@ impl Game {
             size: Point::new(n_cols, n_cols),
             snake: (Point::new(n_cols / 2, n_cols / 2), Snake::new()),
             fruit: (point::random_point(&Point::new(n_cols, n_cols)), fruit::get_random_fruit()),
+            score: 0,
         }
     }
     pub fn n_cols(&self) -> isize {
@@ -45,6 +47,7 @@ impl Game {
                    &self.size);
         let mut status = Status::Hungry;
         if self.fruit.0 == self.snake.0 {
+            self.score += self.fruit.1.score_value();
             self.spawn_fruit();
             self.snake.1.grow(direction);
             status = Status::Fed;
@@ -59,21 +62,6 @@ impl Game {
             status = Status::Dead
         }
         status
-    }
-    fn spawn_fruit(&mut self) {
-        self.fruit = (point::random_point(&self.size),
-                      fruit::get_random_fruit());
-    }
-    fn snake_body(&self) -> Vec<Point<isize>> {
-        let mut pos = self.snake.0.clone();
-        self.snake.1
-            .body
-            .iter()
-            .map(|dir| {
-                     point::move_point(dir, &mut pos, &self.size);
-                     pos.clone()
-                 })
-            .collect::<Vec<_>>()
     }
     pub fn board(&self) -> Vec<cell::Cell<char>> {
         let bg_col = 233;
@@ -91,6 +79,24 @@ impl Game {
                      cell::Cell::new(self.fruit.1.symbol, self.fruit.1.color, bg_col)
                  } else {
                      cell::Cell::new(' ', bg_col, bg_col)
+                 })
+            .collect::<Vec<_>>()
+    }
+    pub fn score(&self) -> i32 {
+        self.score
+    }
+    fn spawn_fruit(&mut self) {
+        self.fruit = (point::random_point(&self.size),
+                      fruit::get_random_fruit());
+    }
+    fn snake_body(&self) -> Vec<Point<isize>> {
+        let mut pos = self.snake.0.clone();
+        self.snake.1
+            .body
+            .iter()
+            .map(|dir| {
+                     point::move_point(dir, &mut pos, &self.size);
+                     pos.clone()
                  })
             .collect::<Vec<_>>()
     }

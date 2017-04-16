@@ -45,6 +45,23 @@ fn fruit_expiration_date(symbol: &char) -> Duration {
     }
 }
 
+fn fruit_score_value(symbol: &char) -> i32 {
+    match *symbol {
+        '🍏' => 1,
+        '🍎' => 2,
+        '🍐' => 3,
+        '🍑' => 4,
+        '🍒' => 5,
+        '🍋' => 6,
+        '🍉' => 7,
+        '🍓' => 8,
+        '🍇' => 9,
+        '🍈' => 10,
+        '🍍' => 11,
+        _ => 0,
+    }
+}
+
 impl Fruit {
     fn new(symbol: &char) -> Fruit {
         Fruit {
@@ -56,6 +73,9 @@ impl Fruit {
     }
     pub fn rotten(&self) -> bool {
         Instant::now().duration_since(self.created) > self.expiration_date
+    }
+    pub fn score_value(&self) -> i32 {
+        fruit_score_value(&self.symbol)
     }
 }
 
