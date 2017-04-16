@@ -17,7 +17,7 @@ fn fruit_color(symbol: &char) -> u8 {
         '🍎' => 88, // red apple
         '🍐' => 36, // pale green pear
         '🍑' => 179, // pale orange peach
-        '🍒' => 169, // bright red cherry
+        '🍒' => 196, // bright red cherry
         '🍋' => 118, // yellow lemon
         '🍉' => 9, // orange orange
         '🍓' => 1, // red strawberry
