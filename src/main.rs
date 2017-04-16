@@ -46,13 +46,19 @@ impl<T> Point<T> {
     }
 }
 
-fn move_point(direction: &Direction, p: &mut Point<isize>, bounds: Point<isize>) {
+fn move_point(direction: &Direction, p: &mut Point<isize>, bounds: &Point<isize>) {
     match *direction {
         Direction::Left => wrap_dec(&mut p.x, bounds.x),
         Direction::Right => wrap_inc(&mut p.x, bounds.x),
         Direction::Up => wrap_dec(&mut p.y, bounds.y),
         Direction::Down => wrap_inc(&mut p.y, bounds.y),
     };
+}
+
+fn random_point(bounds: &Point<isize>) -> Point<isize> {
+    Point::new(modulo(rand::random::<isize>(), bounds.x),
+               modulo(rand::random::<isize>(), bounds.y))
+
 }
 
 enum Status {
@@ -62,28 +68,27 @@ enum Status {
 }
 
 struct Game {
-    n_cols: isize,
+    size: Point<isize>,
     snakes_position: Point<isize>,
     snake: Snake,
     fruits: HashMap<Point<isize>, fruit::Fruit>,
 }
 
 impl Game {
-    fn new(size: isize) -> Game {
+    fn new(n_cols: isize) -> Game {
         Game {
-            n_cols: size,
-            snakes_position: Point::new(size / 2, size / 2),
+            size: Point::new(n_cols, n_cols),
+            snakes_position: Point::new(n_cols / 2, n_cols / 2),
             snake: Snake::new(),
             fruits: HashMap::new(),
         }
     }
     fn n_cols(&self) -> isize {
-        self.n_cols
+        self.size.x
     }
     fn spawn_fruit(&mut self) {
-        self.fruits.insert(Point::new(modulo(rand::random::<isize>(), self.n_cols),
-                            modulo(rand::random::<isize>(), self.n_cols)),
-                            fruit::get_random_fruit());
+        self.fruits.insert(random_point(&self.size),
+                           fruit::get_random_fruit());
     }
     fn process_input(&mut self, direction: &mut Direction) -> Status {
         if *direction == opposite(&self.snake.direction()) {
@@ -91,7 +96,7 @@ impl Game {
         }
         move_point(&direction,
                    &mut self.snakes_position,
-                   Point::new(self.n_cols, self.n_cols));
+                   &self.size);
         let mut status = Status::Hungry;
         if self.fruits.contains_key(&self.snakes_position) {
             self.fruits.remove(&self.snakes_position);
@@ -115,7 +120,7 @@ impl Game {
             .body
             .iter()
             .map(|dir| {
-                     move_point(dir, &mut pos, Point::new(self.n_cols, self.n_cols));
+                     move_point(dir, &mut pos, &self.size);
                      pos.clone()
                  })
             .collect::<Vec<_>>()
@@ -125,8 +130,8 @@ impl Game {
         let head_col = 21;
         let body_col = 32;
         let body = self.snake_body();
-        (0..self.n_cols * self.n_cols)
-            .map(|i| Point::new(modulo(i, self.n_cols), i / self.n_cols))
+        (0..self.size.x * self.size.y)
+            .map(|i| Point::new(modulo(i, self.size.x), i / self.size.y))
             .map(|pos|
                  if pos == self.snakes_position {
                      cell::Cell::new('▣', head_col, bg_col)
