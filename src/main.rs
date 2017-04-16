@@ -10,42 +10,14 @@ use termion::raw::IntoRawMode;
 use std::io::{Write, stdout};
 
 mod direction;
-mod fruit;
 mod modulo;
+mod point;
+mod fruit;
 mod snake;
 
 use direction::Direction;
 use snake::Snake;
-
-#[derive(Clone, PartialEq, Eq, Hash)]
-struct Point<T> {
-    x: T,
-    y: T,
-}
-
-impl<T> Point<T> {
-    fn new(x: T, y: T) -> Point<T> {
-        Point {
-            x: x,
-            y: y,
-        }
-    }
-}
-
-fn move_point(direction: &Direction, p: &mut Point<isize>, bounds: &Point<isize>) {
-    match *direction {
-        Direction::Left => modulo::wrap_dec(&mut p.x, bounds.x),
-        Direction::Right => modulo::wrap_inc(&mut p.x, bounds.x),
-        Direction::Up => modulo::wrap_dec(&mut p.y, bounds.y),
-        Direction::Down => modulo::wrap_inc(&mut p.y, bounds.y),
-    };
-}
-
-fn random_point(bounds: &Point<isize>) -> Point<isize> {
-    Point::new(modulo::modulo(rand::random::<isize>(), bounds.x),
-               modulo::modulo(rand::random::<isize>(), bounds.y))
-
-}
+use point::Point;
 
 enum Status {
     Hungry,
@@ -64,7 +36,7 @@ impl Game {
         Game {
             size: Point::new(n_cols, n_cols),
             snake: (Point::new(n_cols / 2, n_cols / 2), Snake::new()),
-            fruit: (random_point(&Point::new(n_cols, n_cols)), fruit::get_random_fruit()),
+            fruit: (point::random_point(&Point::new(n_cols, n_cols)), fruit::get_random_fruit()),
         }
     }
     fn n_cols(&self) -> isize {
@@ -74,14 +46,14 @@ impl Game {
         self.fruit.1.clone()
     }
     fn spawn_fruit(&mut self) {
-        self.fruit = (random_point(&self.size),
+        self.fruit = (point::random_point(&self.size),
                       fruit::get_random_fruit());
     }
     fn process_input(&mut self, direction: &mut Direction) -> Status {
         if *direction == direction::opposite(&self.snake.1.direction()) {
             *direction = self.snake.1.direction()
         }
-        move_point(&direction,
+        point::move_point(&direction,
                    &mut self.snake.0,
                    &self.size);
         let mut status = Status::Hungry;
@@ -107,7 +79,7 @@ impl Game {
             .body
             .iter()
             .map(|dir| {
-                     move_point(dir, &mut pos, &self.size);
+                     point::move_point(dir, &mut pos, &self.size);
                      pos.clone()
                  })
             .collect::<Vec<_>>()
