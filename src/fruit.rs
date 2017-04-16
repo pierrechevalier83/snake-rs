@@ -1,12 +1,14 @@
 extern crate rand;
 
 use std::time::Duration;
+use std::time::Instant;
 
 #[derive(Clone)]
 pub struct Fruit {
     pub symbol: char,
     pub color: u8,
-    pub lifetime: Duration,
+    expiration_date: Duration,
+    created: Instant,
 }
 
 fn fruit_color(symbol: &char) -> u8 {
@@ -26,7 +28,7 @@ fn fruit_color(symbol: &char) -> u8 {
     }
 }
 
-fn fruit_lifetime(symbol: &char) -> Duration {
+fn fruit_expiration_date(symbol: &char) -> Duration {
     match *symbol {
         '🍏' => Duration::from_millis(5000),
         '🍎' => Duration::from_millis(4500),
@@ -48,8 +50,12 @@ impl Fruit {
         Fruit {
             symbol: symbol.clone(),
             color: fruit_color(symbol),
-            lifetime: fruit_lifetime(symbol),
+            expiration_date: fruit_expiration_date(symbol),
+            created: Instant::now(),
         }
+    }
+    pub fn rotten(&self) -> bool {
+        Instant::now().duration_since(self.created) > self.expiration_date
     }
 }
 

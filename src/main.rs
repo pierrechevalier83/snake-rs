@@ -8,7 +8,7 @@ use termion::event::{Key, Event};
 use termion::input::TermRead;
 use termion::raw::IntoRawMode;
 use std::io::{Write, stdout};
-use std::collections::{HashMap, VecDeque};
+use std::collections::VecDeque;
 
 mod fruit;
 
@@ -71,7 +71,7 @@ struct Game {
     size: Point<isize>,
     snakes_position: Point<isize>,
     snake: Snake,
-    fruits: HashMap<Point<isize>, fruit::Fruit>,
+    fruit: (Point<isize>, fruit::Fruit),
 }
 
 impl Game {
@@ -80,15 +80,18 @@ impl Game {
             size: Point::new(n_cols, n_cols),
             snakes_position: Point::new(n_cols / 2, n_cols / 2),
             snake: Snake::new(),
-            fruits: HashMap::new(),
+            fruit: (random_point(&Point::new(n_cols, n_cols)), fruit::get_random_fruit()),
         }
     }
     fn n_cols(&self) -> isize {
         self.size.x
     }
+    fn fruit(&self) -> fruit::Fruit {
+        self.fruit.1.clone()
+    }
     fn spawn_fruit(&mut self) {
-        self.fruits.insert(random_point(&self.size),
-                           fruit::get_random_fruit());
+        self.fruit = (random_point(&self.size),
+                      fruit::get_random_fruit());
     }
     fn process_input(&mut self, direction: &mut Direction) -> Status {
         if *direction == opposite(&self.snake.direction()) {
@@ -98,8 +101,8 @@ impl Game {
                    &mut self.snakes_position,
                    &self.size);
         let mut status = Status::Hungry;
-        if self.fruits.contains_key(&self.snakes_position) {
-            self.fruits.remove(&self.snakes_position);
+        if self.fruit.0 == self.snakes_position {
+            self.spawn_fruit();
             self.snake.grow(direction);
             status = Status::Fed;
         } else {
@@ -137,8 +140,8 @@ impl Game {
                      cell::Cell::new('▣', head_col, bg_col)
                  } else if body.contains(&pos) {
                      cell::Cell::new('◼', body_col, bg_col)
-                 } else if self.fruits.contains_key(&pos) {
-                     cell::Cell::new(self.fruits[&pos].symbol, self.fruits[&pos].color, bg_col)
+                 } else if self.fruit.0 == pos {
+                     cell::Cell::new(self.fruit.1.symbol, self.fruit.1.color, bg_col)
                  } else {
                      cell::Cell::new(' ', bg_col, bg_col)
                  })
@@ -254,10 +257,12 @@ fn main() {
             Status::Fed => {
                 // increase the speed every time a fruit is eaten
                 speed += 1;
-                game.spawn_fruit();
             }
             Status::Hungry => (),
         };
+        if game.fruit().rotten() {
+            game.spawn_fruit();
+        }
         print_game(&game, &mut stdout);
         std::thread::sleep(std::time::Duration::from_millis((10000 / speed) as u64));
     }
