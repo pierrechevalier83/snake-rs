@@ -31,16 +31,16 @@ fn fruit_color(symbol: &char) -> u8 {
 fn fruit_expiration_date(symbol: &char) -> Duration {
     match *symbol {
         '🍏' => Duration::from_millis(5000),
-        '🍎' => Duration::from_millis(4500),
-        '🍐' => Duration::from_millis(4000),
-        '🍑' => Duration::from_millis(3500),
-        '🍒' => Duration::from_millis(3000),
-        '🍋' => Duration::from_millis(2500),
-        '🍉' => Duration::from_millis(2000),
-        '🍓' => Duration::from_millis(1500),
-        '🍇' => Duration::from_millis(1000),
-        '🍈' => Duration::from_millis(800),
-        '🍍' => Duration::from_millis(500),
+        '🍎' => Duration::from_millis(4750),
+        '🍐' => Duration::from_millis(4500),
+        '🍑' => Duration::from_millis(4250),
+        '🍒' => Duration::from_millis(4000),
+        '🍋' => Duration::from_millis(3750),
+        '🍉' => Duration::from_millis(3500),
+        '🍓' => Duration::from_millis(3250),
+        '🍇' => Duration::from_millis(3000),
+        '🍈' => Duration::from_millis(2750),
+        '🍍' => Duration::from_millis(2500),
         _ => Duration::from_millis(0),
     }
 }
