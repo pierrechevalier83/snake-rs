@@ -8,9 +8,13 @@ use termion::event::{Key, Event};
 use termion::input::TermRead;
 use termion::raw::IntoRawMode;
 use std::io::{Write, stdout};
-use std::collections::VecDeque;
 
+mod direction;
 mod fruit;
+mod snake;
+
+use direction::Direction;
+use snake::Snake;
 
 /// Workaround strange behaviour of % operator in rust:
 /// -1 % 10 returns -1 instead of 9!!!
@@ -92,7 +96,7 @@ impl Game {
                       fruit::get_random_fruit());
     }
     fn process_input(&mut self, direction: &mut Direction) -> Status {
-        if *direction == opposite(&self.snake.1.direction()) {
+        if *direction == direction::opposite(&self.snake.1.direction()) {
             *direction = self.snake.1.direction()
         }
         move_point(&direction,
@@ -144,44 +148,6 @@ impl Game {
                      cell::Cell::new(' ', bg_col, bg_col)
                  })
             .collect::<Vec<_>>()
-    }
-}
-
-#[derive(Clone, PartialEq)]
-enum Direction {
-    Up,
-    Down,
-    Left,
-    Right,
-}
-
-fn opposite(dir: &Direction) -> Direction {
-    match *dir {
-        Direction::Up => Direction::Down,
-        Direction::Down => Direction::Up,
-        Direction::Left => Direction::Right,
-        Direction::Right => Direction::Left,
-    }
-}
-
-#[derive(Clone)]
-struct Snake {
-    body: VecDeque<Direction>,
-}
-
-impl Snake {
-    fn new() -> Snake {
-        Snake { body: vec![Direction::Left; 3].into_iter().collect() }
-    }
-    fn crawl(&mut self, direction: &Direction) {
-        self.grow(direction);
-        self.body.pop_back();
-    }
-    fn grow(&mut self, direction: &Direction) {
-        self.body.push_front(opposite(direction));
-    }
-    fn direction(&self) -> Direction {
-        opposite(self.body.front().unwrap())
     }
 }
 
