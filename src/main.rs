@@ -69,8 +69,7 @@ enum Status {
 
 struct Game {
     size: Point<isize>,
-    snakes_position: Point<isize>,
-    snake: Snake,
+    snake: (Point<isize>, Snake),
     fruit: (Point<isize>, fruit::Fruit),
 }
 
@@ -78,8 +77,7 @@ impl Game {
     fn new(n_cols: isize) -> Game {
         Game {
             size: Point::new(n_cols, n_cols),
-            snakes_position: Point::new(n_cols / 2, n_cols / 2),
-            snake: Snake::new(),
+            snake: (Point::new(n_cols / 2, n_cols / 2), Snake::new()),
             fruit: (random_point(&Point::new(n_cols, n_cols)), fruit::get_random_fruit()),
         }
     }
@@ -94,32 +92,32 @@ impl Game {
                       fruit::get_random_fruit());
     }
     fn process_input(&mut self, direction: &mut Direction) -> Status {
-        if *direction == opposite(&self.snake.direction()) {
-            *direction = self.snake.direction()
+        if *direction == opposite(&self.snake.1.direction()) {
+            *direction = self.snake.1.direction()
         }
         move_point(&direction,
-                   &mut self.snakes_position,
+                   &mut self.snake.0,
                    &self.size);
         let mut status = Status::Hungry;
-        if self.fruit.0 == self.snakes_position {
+        if self.fruit.0 == self.snake.0 {
             self.spawn_fruit();
-            self.snake.grow(direction);
+            self.snake.1.grow(direction);
             status = Status::Fed;
         } else {
-            self.snake.crawl(direction);
+            self.snake.1.crawl(direction);
         }
         if self.snake_body()
                .iter()
                .skip(1)
                .collect::<Vec<_>>()
-               .contains(&&self.snakes_position) {
+               .contains(&&self.snake.0) {
             status = Status::Dead
         }
         status
     }
     fn snake_body(&self) -> Vec<Point<isize>> {
-        let mut pos = self.snakes_position.clone();
-        self.snake
+        let mut pos = self.snake.0.clone();
+        self.snake.1
             .body
             .iter()
             .map(|dir| {
@@ -136,7 +134,7 @@ impl Game {
         (0..self.size.x * self.size.y)
             .map(|i| Point::new(modulo(i, self.size.x), i / self.size.y))
             .map(|pos|
-                 if pos == self.snakes_position {
+                 if pos == self.snake.0 {
                      cell::Cell::new('▣', head_col, bg_col)
                  } else if body.contains(&pos) {
                      cell::Cell::new('◼', body_col, bg_col)
@@ -215,8 +213,6 @@ fn main() {
     let mut stdout = stdout().into_raw_mode().unwrap();
 
     let mut game = Game::new(pick_a_size());
-    game.snake = Snake::new();
-    game.spawn_fruit();
     print_game(&game, &mut stdout);
     let mut direction = Direction::Right;
     let mut speed = 100;
