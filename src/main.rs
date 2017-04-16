@@ -31,12 +31,27 @@ fn wrap_dec(x: &mut isize, n: isize) {
     *x = modulo(*x - 1, n);
 }
 
-fn move_point(direction: &Direction, (x, y): (&mut isize, &mut isize), bounds: (isize, isize)) {
+#[derive(Clone, PartialEq, Eq, Hash)]
+struct Point<T> {
+    x: T,
+    y: T,
+}
+
+impl<T> Point<T> {
+    fn new(x: T, y: T) -> Point<T> {
+        Point {
+            x: x,
+            y: y,
+        }
+    }
+}
+
+fn move_point(direction: &Direction, p: &mut Point<isize>, bounds: Point<isize>) {
     match *direction {
-        Direction::Left => wrap_dec(x, bounds.0),
-        Direction::Right => wrap_inc(x, bounds.0),
-        Direction::Up => wrap_dec(y, bounds.1),
-        Direction::Down => wrap_inc(y, bounds.1),
+        Direction::Left => wrap_dec(&mut p.x, bounds.x),
+        Direction::Right => wrap_inc(&mut p.x, bounds.x),
+        Direction::Up => wrap_dec(&mut p.y, bounds.y),
+        Direction::Down => wrap_inc(&mut p.y, bounds.y),
     };
 }
 
@@ -48,16 +63,16 @@ enum Status {
 
 struct Game {
     n_cols: isize,
-    snakes_position: (isize, isize),
+    snakes_position: Point<isize>,
     snake: Snake,
-    fruits: HashMap<(isize, isize), fruit::Fruit>,
+    fruits: HashMap<Point<isize>, fruit::Fruit>,
 }
 
 impl Game {
     fn new(size: isize) -> Game {
         Game {
             n_cols: size,
-            snakes_position: (size / 2, size / 2),
+            snakes_position: Point::new(size / 2, size / 2),
             snake: Snake::new(),
             fruits: HashMap::new(),
         }
@@ -66,7 +81,7 @@ impl Game {
         self.n_cols
     }
     fn spawn_fruit(&mut self) {
-        self.fruits.insert((modulo(rand::random::<isize>(), self.n_cols),
+        self.fruits.insert(Point::new(modulo(rand::random::<isize>(), self.n_cols),
                             modulo(rand::random::<isize>(), self.n_cols)),
                             fruit::get_random_fruit());
     }
@@ -75,8 +90,8 @@ impl Game {
             *direction = self.snake.direction()
         }
         move_point(&direction,
-                   (&mut self.snakes_position.0, &mut self.snakes_position.1),
-                   (self.n_cols, self.n_cols));
+                   &mut self.snakes_position,
+                   Point::new(self.n_cols, self.n_cols));
         let mut status = Status::Hungry;
         if self.fruits.contains_key(&self.snakes_position) {
             self.fruits.remove(&self.snakes_position);
@@ -94,14 +109,14 @@ impl Game {
         }
         status
     }
-    fn snake_body(&self) -> Vec<(isize, isize)> {
-        let (mut x, mut y) = self.snakes_position;
+    fn snake_body(&self) -> Vec<Point<isize>> {
+        let mut pos = self.snakes_position.clone();
         self.snake
             .body
             .iter()
             .map(|dir| {
-                     move_point(dir, (&mut x, &mut y), (self.n_cols, self.n_cols));
-                     (x, y)
+                     move_point(dir, &mut pos, Point::new(self.n_cols, self.n_cols));
+                     pos.clone()
                  })
             .collect::<Vec<_>>()
     }
@@ -111,7 +126,7 @@ impl Game {
         let body_col = 32;
         let body = self.snake_body();
         (0..self.n_cols * self.n_cols)
-            .map(|i| (modulo(i, self.n_cols), i / self.n_cols))
+            .map(|i| Point::new(modulo(i, self.n_cols), i / self.n_cols))
             .map(|pos|
                  if pos == self.snakes_position {
                      cell::Cell::new('▣', head_col, bg_col)
