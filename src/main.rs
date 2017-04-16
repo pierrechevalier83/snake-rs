@@ -10,100 +10,15 @@ use termion::raw::IntoRawMode;
 use std::io::{Write, stdout};
 
 mod direction;
+mod game;
 mod modulo;
 mod point;
 mod fruit;
 mod snake;
 
 use direction::Direction;
-use snake::Snake;
-use point::Point;
-
-enum Status {
-    Hungry,
-    Fed,
-    Dead,
-}
-
-struct Game {
-    size: Point<isize>,
-    snake: (Point<isize>, Snake),
-    fruit: (Point<isize>, fruit::Fruit),
-}
-
-impl Game {
-    fn new(n_cols: isize) -> Game {
-        Game {
-            size: Point::new(n_cols, n_cols),
-            snake: (Point::new(n_cols / 2, n_cols / 2), Snake::new()),
-            fruit: (point::random_point(&Point::new(n_cols, n_cols)), fruit::get_random_fruit()),
-        }
-    }
-    fn n_cols(&self) -> isize {
-        self.size.x
-    }
-    fn fruit(&self) -> fruit::Fruit {
-        self.fruit.1.clone()
-    }
-    fn spawn_fruit(&mut self) {
-        self.fruit = (point::random_point(&self.size),
-                      fruit::get_random_fruit());
-    }
-    fn process_input(&mut self, direction: &mut Direction) -> Status {
-        if *direction == direction::opposite(&self.snake.1.direction()) {
-            *direction = self.snake.1.direction()
-        }
-        point::move_point(&direction,
-                   &mut self.snake.0,
-                   &self.size);
-        let mut status = Status::Hungry;
-        if self.fruit.0 == self.snake.0 {
-            self.spawn_fruit();
-            self.snake.1.grow(direction);
-            status = Status::Fed;
-        } else {
-            self.snake.1.crawl(direction);
-        }
-        if self.snake_body()
-               .iter()
-               .skip(1)
-               .collect::<Vec<_>>()
-               .contains(&&self.snake.0) {
-            status = Status::Dead
-        }
-        status
-    }
-    fn snake_body(&self) -> Vec<Point<isize>> {
-        let mut pos = self.snake.0.clone();
-        self.snake.1
-            .body
-            .iter()
-            .map(|dir| {
-                     point::move_point(dir, &mut pos, &self.size);
-                     pos.clone()
-                 })
-            .collect::<Vec<_>>()
-    }
-    fn board(&self) -> Vec<matrix_display::cell::Cell<char>> {
-        let bg_col = 233;
-        let head_col = 21;
-        let body_col = 32;
-        let body = self.snake_body();
-        (0..self.size.x * self.size.y)
-            .map(|i| Point::new(modulo::modulo(i, self.size.x), i / self.size.y))
-            .map(|pos|
-                 if pos == self.snake.0 {
-                     cell::Cell::new('▣', head_col, bg_col)
-                 } else if body.contains(&pos) {
-                     cell::Cell::new('◼', body_col, bg_col)
-                 } else if self.fruit.0 == pos {
-                     cell::Cell::new(self.fruit.1.symbol, self.fruit.1.color, bg_col)
-                 } else {
-                     cell::Cell::new(' ', bg_col, bg_col)
-                 })
-            .collect::<Vec<_>>()
-    }
-}
+use game::Game;
+use game::Status;
 
 fn print_game<W>(game: &Game, stdout: &mut W)
     where W: Write
@@ -176,9 +91,7 @@ fn main() {
             }
             Status::Hungry => (),
         };
-        if game.fruit().rotten() {
-            game.spawn_fruit();
-        }
+        game.refresh();
         print_game(&game, &mut stdout);
         std::thread::sleep(std::time::Duration::from_millis((10000 / speed) as u64));
     }
