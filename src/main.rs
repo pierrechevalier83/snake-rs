@@ -7,7 +7,7 @@ use matrix_display::*;
 use termion::event::{Key, Event};
 use termion::input::TermRead;
 use termion::raw::IntoRawMode;
-use std::io::{Write, stdout};
+use std::io::{Read, Write, stdout};
 
 mod direction;
 mod game;
@@ -77,6 +77,11 @@ fn main() {
                 Event::Key(Key::Char('l')) |
                 Event::Key(Key::Right) => {
                     direction = Direction::Right;
+                }
+                Event::Key(Key::Char(' ')) => {
+                    while !stdin.next().is_some() {
+                        std::thread::sleep(std::time::Duration::from_millis(100));
+                    }
                 }
                 _ => (),
             };
