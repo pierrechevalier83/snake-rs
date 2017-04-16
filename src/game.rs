@@ -76,7 +76,7 @@ impl Game {
                  } else if body.contains(&pos) {
                      cell::Cell::new('◼', body_col, bg_col)
                  } else if self.fruit.0 == pos {
-                     cell::Cell::new(self.fruit.1.symbol, self.fruit.1.color, bg_col)
+                     cell::Cell::new(self.fruit.1.symbol, self.fruit.1.color(), bg_col)
                  } else {
                      cell::Cell::new(' ', bg_col, bg_col)
                  })

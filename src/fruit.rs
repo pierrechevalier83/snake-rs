@@ -6,7 +6,7 @@ use std::time::Instant;
 #[derive(Clone)]
 pub struct Fruit {
     pub symbol: char,
-    pub color: u8,
+    color: u8,
     expiration_date: Duration,
     created: Instant,
 }
@@ -76,6 +76,16 @@ impl Fruit {
     }
     pub fn score_value(&self) -> i32 {
         fruit_score_value(&self.symbol)
+    }
+    pub fn color(&self) -> u8 {
+        if self.ripe() {
+            rand::random::<u8>()
+        } else {
+            self.color
+        }
+    }
+    fn ripe(&self) -> bool {
+        Instant::now().duration_since(self.created) + Duration::from_secs(1) > self.expiration_date
     }
 }
 
