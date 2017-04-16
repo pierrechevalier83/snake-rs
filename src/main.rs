@@ -11,29 +11,11 @@ use std::io::{Write, stdout};
 
 mod direction;
 mod fruit;
+mod modulo;
 mod snake;
 
 use direction::Direction;
 use snake::Snake;
-
-/// Workaround strange behaviour of % operator in rust:
-/// -1 % 10 returns -1 instead of 9!!!
-fn modulo<T>(x: T, n: T) -> T where T: num::PrimInt {
-    let m = x.rem(n);
-	if m < T::zero() {
-		m + n
-	} else {
-		m
-	}
-}
-
-fn wrap_inc(x: &mut isize, n: isize) {
-    *x = modulo(*x + 1, n);
-}
-
-fn wrap_dec(x: &mut isize, n: isize) {
-    *x = modulo(*x - 1, n);
-}
 
 #[derive(Clone, PartialEq, Eq, Hash)]
 struct Point<T> {
@@ -52,16 +34,16 @@ impl<T> Point<T> {
 
 fn move_point(direction: &Direction, p: &mut Point<isize>, bounds: &Point<isize>) {
     match *direction {
-        Direction::Left => wrap_dec(&mut p.x, bounds.x),
-        Direction::Right => wrap_inc(&mut p.x, bounds.x),
-        Direction::Up => wrap_dec(&mut p.y, bounds.y),
-        Direction::Down => wrap_inc(&mut p.y, bounds.y),
+        Direction::Left => modulo::wrap_dec(&mut p.x, bounds.x),
+        Direction::Right => modulo::wrap_inc(&mut p.x, bounds.x),
+        Direction::Up => modulo::wrap_dec(&mut p.y, bounds.y),
+        Direction::Down => modulo::wrap_inc(&mut p.y, bounds.y),
     };
 }
 
 fn random_point(bounds: &Point<isize>) -> Point<isize> {
-    Point::new(modulo(rand::random::<isize>(), bounds.x),
-               modulo(rand::random::<isize>(), bounds.y))
+    Point::new(modulo::modulo(rand::random::<isize>(), bounds.x),
+               modulo::modulo(rand::random::<isize>(), bounds.y))
 
 }
 
@@ -136,7 +118,7 @@ impl Game {
         let body_col = 32;
         let body = self.snake_body();
         (0..self.size.x * self.size.y)
-            .map(|i| Point::new(modulo(i, self.size.x), i / self.size.y))
+            .map(|i| Point::new(modulo::modulo(i, self.size.x), i / self.size.y))
             .map(|pos|
                  if pos == self.snake.0 {
                      cell::Cell::new('▣', head_col, bg_col)
