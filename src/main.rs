@@ -2,6 +2,7 @@ extern crate matrix_display;
 extern crate num;
 extern crate rand;
 extern crate termion;
+extern crate tui;
 
 use matrix_display::*;
 use termion::event::{Key, Event};
@@ -19,6 +20,8 @@ mod snake;
 use direction::Direction;
 use game::Game;
 use game::Status;
+use tui::Terminal;
+use tui::backend::TermionBackend;
 
 fn print_game<W>(game: &Game, stdout: &mut W)
     where W: Write
@@ -37,18 +40,19 @@ fn print_game<W>(game: &Game, stdout: &mut W)
     stdout.flush().unwrap();
 }
 
-fn pick_a_size() -> isize {
-    match termion::terminal_size() {
-        Ok((n_cols, n_rows)) => std::cmp::min((n_cols / 3) as isize, std::cmp::min(n_rows as isize, 40)),
+fn pick_a_size(terminal: &Terminal<TermionBackend>) -> isize {
+    match terminal.size() {
+        Ok(r) => std::cmp::min((r.width / 3) as isize, std::cmp::min(r.height as isize, 40)),
         Err(_) => 20,
     }
 }
 
 fn main() {
+    let terminal = Terminal::new(TermionBackend::new().unwrap()).unwrap();
     let mut stdin = termion::async_stdin().events();
     let mut stdout = stdout().into_raw_mode().unwrap();
 
-    let mut game = Game::new(pick_a_size());
+    let mut game = Game::new(pick_a_size(&terminal));
     print_game(&game, &mut stdout);
     let mut direction = Direction::Right;
     let mut speed = 100;
