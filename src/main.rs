@@ -8,7 +8,7 @@ use matrix_display::*;
 use termion::event::{Key, Event};
 use termion::input::TermRead;
 use termion::raw::IntoRawMode;
-use std::io::{Read, Write, stdout};
+use std::io::{Write, stdout};
 
 mod direction;
 mod game;
