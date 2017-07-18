@@ -23,18 +23,14 @@ use game::Status;
 use tui::Terminal;
 use tui::backend::TermionBackend;
 
-fn print_game<W>(game: &Game, stdout: &mut W)
+fn print_game<W>(game: &Game, stdout: &mut W, terminal: &mut Terminal<TermionBackend>)
     where W: Write
 {
     let data = matrix::Matrix::new(game.n_cols() as usize, game.board());
     let format = Format::new(3, 1);
     let display = MatrixDisplay::new(format, data);
-    write!(stdout,
-           "{}{}{}",
-           termion::clear::All,
-           termion::cursor::Hide,
-           termion::cursor::Goto(1, 1))
-            .unwrap();
+    terminal.clear().unwrap();
+    terminal.hide_cursor().unwrap();
     write!(stdout, "{}Score: {} \r\n", termion::color::Bg(termion::color::AnsiValue(233)), game.score()).unwrap();
     display.print(stdout, &style::BordersStyle::None);
     stdout.flush().unwrap();
@@ -48,12 +44,12 @@ fn pick_a_size(terminal: &Terminal<TermionBackend>) -> isize {
 }
 
 fn main() {
-    let terminal = Terminal::new(TermionBackend::new().unwrap()).unwrap();
+    let mut terminal = Terminal::new(TermionBackend::new().unwrap()).unwrap();
     let mut stdin = termion::async_stdin().events();
     let mut stdout = stdout().into_raw_mode().unwrap();
 
     let mut game = Game::new(pick_a_size(&terminal));
-    print_game(&game, &mut stdout);
+    print_game(&game, &mut stdout, &mut terminal);
     let mut direction = Direction::Right;
     let mut speed = 100;
     loop {
@@ -102,7 +98,7 @@ fn main() {
             Status::Hungry => (),
         };
         game.refresh();
-        print_game(&game, &mut stdout);
+        print_game(&game, &mut stdout, &mut terminal);
         std::thread::sleep(std::time::Duration::from_millis((10000 / speed) as u64));
     }
 }
