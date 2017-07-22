@@ -26,9 +26,9 @@ use tui::backend::TermionBackend;
 fn print_game<W>(game: &Game, stdout: &mut W, terminal: &mut Terminal<TermionBackend>)
     where W: Write
 {
-    let data = matrix::Matrix::new(game.n_cols() as usize, game.board());
+    let mut data = matrix::Matrix::new(game.n_cols() as usize, game.board());
     let format = Format::new(3, 1);
-    let display = MatrixDisplay::new(format, data);
+    let display = MatrixDisplay::new(&format, &mut data);
     terminal.clear().unwrap();
     terminal.hide_cursor().unwrap();
     write!(stdout, "{}Score: {} \r\n", termion::color::Bg(termion::color::AnsiValue(233)), game.score()).unwrap();
