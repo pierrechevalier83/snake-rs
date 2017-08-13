@@ -4,6 +4,7 @@ version = "0.1.0"
 authors = ["Pierre Chevalier <pierrechevalier83@gmail.com>"]
 
 [dependencies]
+"ansi_term" = "0.9"
 "num" = "0.1"
 "matrix_display" = "0.8"
 "rand" = "0.3"
